@@ -1,9 +1,7 @@
-NAMESPACE=airflow
-EMAIL=test@gmail.com
-DOMAIN=airflow.example.com
-
-
-if [ "$1" = issuer ]; then
+NAMESPACE=wordpress
+EMAIL=example@gmail.com
+DOMAIN=testapp.example.com
+INGRESSNAME=wordpress-ingress
 
 cat << EOF >> staging-issuer.yaml
 apiVersion: cert-manager.io/v1
@@ -51,10 +49,10 @@ kubectl create -f production-issuer.yaml -n $NAMESPACE
 
 rm -f production-issuer.yaml
 
-fi
+kubectl patch ingress $INGRESSNAME -p '{"metadata": {"annotations":{"cert-manager.io/issuer":"letsencrypt-staging"}}}' -n $NAMESPACE
 
+kubectl patch ingress $INGRESSNAME -p '{ "spec": { "tls": [{"hosts": ["'$DOMAIN'"],"secretName": "'$NAMESPACE'-staging-certificate"}]}}' -n $NAMESPACE
 
-if [ "$1" = staging ]; then
 cat << EOF >> staging-certificate.yaml
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -71,9 +69,11 @@ spec:
 EOF
 kubectl create -f staging-certificate.yaml -n $NAMESPACE
 rm -f  staging-certificate.yaml
-fi
 
-if [ "$1" = production ]; then
+kubectl patch ingress $INGRESSNAME -p '{"metadata": {"annotations":{"cert-manager.io/issuer":"letsencrypt-production"}}}' -n $NAMESPACE
+
+kubectl patch ingress $INGRESSNAME -p '{ "spec": { "tls": [{"hosts": ["'$DOMAIN'"],"secretName": "'$NAMESPACE'-production-certificate"}]}}' -n $NAMESPACE
+
 cat << EOF >> production-certificate.yaml
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -90,25 +90,4 @@ spec:
 EOF
 kubectl create -f production-certificate.yaml -n $NAMESPACE
 rm -f  production-certificate.yaml
-fi
 
-
-#metadata:
-#  annotations:
-#    cert-manager.io/issuer: letsencrypt-staging
-#spec:
-#  rules:
-#  tls:
-#  - hosts:
-#    - invoiceninja.optimusconsortium.com
-#    secretName: invoiceninja-staging-certificate
-    
-#metadata:
-#  annotations:
-#    cert-manager.io/issuer: letsencrypt-production
-#spec:
-#  rules:
-#  tls:
-#  - hosts:
-#    - invoiceninja.optimusconsortium.com
-#    secretName: invoiceninja-production-certificate
