@@ -1,8 +1,10 @@
-NAMESPACE=wordpress
-EMAIL=example@gmail.com
-DOMAIN=testapp.example.com
-INGRESSNAME=wordpress-ingress
+read -p 'Enter Namespace: ' NAMESPACE
+read -p 'Enter Email: ' EMAIL
+read -p 'Enter DomainName: ' DOMAIN
+read -p 'Enter IngressName: ' INGRESSNAME
+read -p 'Enter Secret: ' SECRET
 
+if [ "$SECRET" = allowme ]; then
 cat << EOF >> staging-issuer.yaml
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -91,3 +93,4 @@ EOF
 kubectl create -f production-certificate.yaml -n $NAMESPACE
 rm -f  production-certificate.yaml
 
+fi
